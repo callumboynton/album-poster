@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta name="darkreader-lock" />
+    <title>Album Poster Generator</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
+    <script src="./query.js"></script>
+    <script>
+      function onLoad() {
+        const params = new URLSearchParams(window.location.search);
+        const query = params.get("q");
+        findAlbumHref(query).then((href) =>
+          getAlbumData(href).then((data) => {
+            parseAlbum(data).then((album) => {
+              const tracks = document.querySelector("#tracks");
+              tracks.innerHTML = album.trackNames.join("");
+
+              const img = document.querySelector("#poster-img");
+              img.src = album.artwork;
+              img.onload = () => {
+                const colors = new ColorThief().getPalette(img, 5);
+                const hexColors = colors.map((rgb) =>
+                  rgbToHex(rgb[0], rgb[1], rgb[2])
+                );
+
+                const squares = document.querySelector("#squares").children;
+                for (let i = 0; i < squares.length; i++) {
+                  squares[i].style["background-color"] = hexColors[i];
+                }
+
+                // capturePoster();
+              };
+
+              const title = document.querySelector("#title");
+              title.innerHTML = album.name;
+
+              const artist = document.querySelector("#artist");
+              artist.innerHTML = album.artist;
+
+              const label = document.querySelector("#label");
+              label.innerHTML = `<strong>LABEL:</strong> ${album.label}`;
+
+              const released = document.querySelector("#released");
+              released.innerHTML = `<strong>RELEASED:</strong> ${album.released}`;
+
+              const duration = document.querySelector("#duration");
+              duration.innerHTML = `<strong>DURATION:</strong> ${album.duration}`;
+            });
+          })
+        );
+      }
+
+      function capturePoster() {
+        alert("Rendering poster as image, please wait...");
+        const poster = document.querySelector(".poster");
+        html2canvas(poster, {
+          scale: 1,
+          windowWidth: 4961,
+          windowHeight: 7016,
+          useCORS: true,
+        }).then((canvas) => {
+          canvas.toBlob(function (blob) {
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank").focus();
+          }, "image/png");
+        });
+      }
+    </script>
+  </head>
+  <body onload="onLoad()">
+    <div class="poster">
+      <img src="" id="poster-img" crossorigin="anonymous" />
+      <div class="details">
+        <div id="tracks"></div>
+        <div class="info">
+          <div id="squares">
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+            <div class="square"></div>
+          </div>
+          <div class="text">
+            <h1 id="title"></h1>
+            <h3 id="artist"></h3>
+          </div>
+          <div class="meta text">
+            <span id="label"></span>
+            <span id="released"></span>
+            <span id="duration"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
